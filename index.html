@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -171,6 +171,8 @@ body::before{
   z-index: 100;
   padding: 0 15px;
   flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
 }
 
 .upload-btn {
@@ -185,6 +187,9 @@ body::before{
   transition: 0.3s ease;
   min-width: 120px;
   text-align: center;
+  margin-bottom: 10px;
+  width: 80%;
+  max-width: 300px;
 }
 
 .upload-btn:active {
@@ -204,6 +209,15 @@ body::before{
 #cloudGalleryBtn {
   background: linear-gradient(135deg, rgba(255, 152, 0, 0.3), rgba(255, 193, 7, 0.3));
   color: white;
+}
+
+/* 重新配置按钮样式 */
+#reconfigBtn {
+  background: linear-gradient(135deg, rgba(255, 87, 34, 0.3), rgba(255, 152, 0, 0.3));
+  color: white;
+  margin-top: 10px;
+  width: 80%;
+  max-width: 300px;
 }
 
 #fileInput{display:none;}
@@ -313,6 +327,7 @@ body::before{
   display: flex;
   gap: 12px;
   margin-top: 30px;
+  flex-wrap: wrap;
 }
 
 .github-btn {
@@ -327,11 +342,24 @@ body::before{
   cursor: pointer;
   transition: all 0.2s ease;
   backdrop-filter: blur(10px);
+  min-width: 100px;
 }
 
 .github-btn.primary {
   background: linear-gradient(135deg, rgba(33, 150, 243, 0.9), rgba(0, 188, 212, 0.9));
   border: none;
+}
+
+#reconfigGithubBtn {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.8), rgba(255, 87, 34, 0.8));
+  border: none;
+  color: white;
+}
+
+#reconfigGithubBtn:hover {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 1), rgba(255, 87, 34, 1));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 152, 0, 0.4);
 }
 
 .github-btn:hover {
@@ -698,6 +726,7 @@ body::before{
   <div class="upload-btn" id="uploadBtn">选择文件上架</div>
   <div class="upload-btn" id="saveToGitHubBtn">保存到GitHub</div>
   <div class="upload-btn" id="cloudGalleryBtn">云端文件库</div>
+  <div class="upload-btn" id="reconfigBtn">重新配置GitHub</div>
 </div>
 
 <input type="file" id="fileInput" multiple>
@@ -737,6 +766,7 @@ body::before{
     <div class="github-form-actions">
       <button class="github-btn" id="cancelGithubBtn">取消</button>
       <button class="github-btn" id="testGithubBtn">测试连接</button>
+      <button class="github-btn" id="reconfigGithubBtn">重新配置</button>
       <button class="github-btn primary" id="saveGithubBtn">保存配置</button>
     </div>
     
@@ -783,6 +813,7 @@ body::before{
 const uploadBtn = document.getElementById('uploadBtn');
 const saveToGitHubBtn = document.getElementById('saveToGitHubBtn');
 const cloudGalleryBtn = document.getElementById('cloudGalleryBtn');
+const reconfigBtn = document.getElementById('reconfigBtn'); // 新增的重新配置按钮
 const fileInput = document.getElementById('fileInput');
 const boxList = document.querySelectorAll('.scroll-box');
 
@@ -797,6 +828,7 @@ const githubStatus = document.getElementById('githubStatus');
 const saveGithubBtn = document.getElementById('saveGithubBtn');
 const cancelGithubBtn = document.getElementById('cancelGithubBtn');
 const testGithubBtn = document.getElementById('testGithubBtn');
+const reconfigGithubBtn = document.getElementById('reconfigGithubBtn');
 
 // 云端相册相关元素
 const cloudGalleryOverlay = document.getElementById('cloudGalleryOverlay');
@@ -889,6 +921,7 @@ function getFileType(file) {
   return 'other';
 }
 
+// 加载GitHub配置
 function loadGithubConfig() {
   const savedConfig = localStorage.getItem('githubUploadConfig');
   if (savedConfig) {
@@ -913,7 +946,29 @@ function loadGithubConfig() {
   }
 }
 
-
+// 重新配置GitHub
+function reconfigureGitHub() {
+  // 清除localStorage中的配置
+  localStorage.removeItem('githubUploadConfig');
+  
+  // 重置githubConfig对象
+  githubConfig = null;
+  
+  // 清空输入框
+  githubTokenInput.value = '';
+  githubOwnerInput.value = '';
+  githubRepoInput.value = '';
+  githubPathInput.value = '';
+  githubBranchInput.value = 'main';
+  
+  // 显示成功消息
+  showGitHubStatus('配置已清除，请重新输入！', 'success');
+  
+  // 聚焦到Token输入框
+  setTimeout(() => {
+    githubTokenInput.focus();
+  }, 100);
+}
 
 // 测试GitHub连接
 async function testGitHubConnection() {
@@ -982,6 +1037,17 @@ function saveGithubConfig() {
 // 显示GitHub配置弹窗
 function showGitHubConfig() {
   loadGithubConfig();
+  
+  // 检查是否已有配置
+  const hasConfig = localStorage.getItem('githubUploadConfig');
+  if (hasConfig) {
+    // 已有配置，显示重新配置按钮
+    reconfigGithubBtn.style.display = 'block';
+  } else {
+    // 没有配置，隐藏重新配置按钮
+    reconfigGithubBtn.style.display = 'none';
+  }
+  
   githubConfigOverlay.classList.add('show');
 }
 
@@ -1169,7 +1235,7 @@ async function uploadToGitHub() {
   }
 }
 
-// 获取云端文件列表 - 修复：显示所有文件
+// 获取云端文件列表
 async function loadCloudFiles() {
   if (!githubConfig) {
     showAlert('请先配置GitHub上传信息！');
@@ -1223,7 +1289,7 @@ async function loadCloudFiles() {
   }
 }
 
-// 显示云端文件 - 修复：显示文件图标和大小
+// 显示云端文件
 function displayCloudFiles() {
   if (cloudFiles.length === 0) {
     cloudEmpty.style.display = 'block';
@@ -1270,7 +1336,7 @@ function viewCloudFile(url, name) {
   window.open(url, '_blank');
 }
 
-// 删除云端文件 - 修复版
+// 删除云端文件
 async function deleteCloudFile(path, sha, name) {
   if (!githubConfig) {
     showAlert('请先配置GitHub上传信息！');
@@ -1383,9 +1449,20 @@ saveToGitHubBtn.onclick = () => {
 cloudGalleryBtn.onclick = showCloudGallery;
 closeCloudGallery.onclick = hideCloudGallery;
 
+// 新增重新配置按钮的事件
+reconfigBtn.onclick = function() {
+  // 先关闭云端文件库（如果已打开）
+  if (cloudGalleryOverlay.classList.contains('show')) {
+    hideCloudGallery();
+  }
+  // 显示GitHub配置弹窗
+  showGitHubConfig();
+};
+
 saveGithubBtn.onclick = saveGithubConfig;
 cancelGithubBtn.onclick = hideGitHubConfig;
 testGithubBtn.onclick = testGitHubConnection;
+reconfigGithubBtn.onclick = reconfigureGitHub;
 
 githubConfigOverlay.addEventListener('click', (e) => {
   if (e.target === githubConfigOverlay) {
