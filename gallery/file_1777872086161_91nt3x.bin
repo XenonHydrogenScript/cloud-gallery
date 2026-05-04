@@ -1,0 +1,274 @@
+elgg.import("AlGui")
+
+
+import "irene.window.algui.AlGuiData"
+import "irene.window.algui.AlGuiDialogBox"
+import "irene.window.algui.AlGuiSoundEffect"
+import "irene.window.algui.AlGuiWindowView"
+import "android.graphics.Typeface"
+
+
+-- 初始化Minecraft风格UI
+Lock.Ui(function()
+    -- 清理旧UI
+    if AlGui.algui then
+        AlGui.algui.clearBall()
+        AlGui.algui.clearMenu()
+        AlGuiWindowView.clearAllViews(context)
+        gui = AlGui.newGUI(context)
+    else
+        gui = AlGui.GUI(context)
+    end
+
+    -- 初始化通知系统
+    if AlGuiBubbleNotification.bn then
+        Inform = AlGuiBubbleNotification.newInform(context)
+    else
+        Inform = AlGuiBubbleNotification.Inform(context)
+    end
+
+    -- Minecraft风格配置
+    gui.getMenuMainTitle().setText("Minecraft辅助工具")
+    gui.getMenuSubTitle().setText("版本 1.19.2")
+    gui.getMenuExplanation().setText("方块世界增强系统 - 谨慎使用")
+    gui.getMenuBottomLeftButton().setText("隐藏/长按退出")
+    gui.getMenuBottomRightButton().setText("最小化")
+
+    -- 长按退出
+    gui.getMenuBottomLeftButton().setOnLongClickListener(luajava.createProxy(
+        "android.view.View$OnLongClickListener",
+        {
+            onLongClick = function(edit)
+                AlGuiBubbleNotification.Inform(context).clearW();
+                gui.clearMenu();
+                gui.clearBall();
+                AlGuiWindowView.clearAllViews(context);
+                luajava.exit()
+            end
+        }
+    ))
+
+    -- 样式配置 (Minecraft风格)
+    gui.setBallImage(null, 50, 50)
+    gui.setAllViewMargins(8, 8, 8, 8)
+    AlGuiData.menuScrollWidth = 800
+    AlGuiData.menuScrollHeight = 550
+    AlGuiData.rootLayoutFilletRadius = 0 -- 方形边缘
+    AlGuiData.rootLayoutStrokeWidth = 2
+    AlGuiData.menuTopLineFilletRadius = 0
+    AlGuiData.menuTransparency = 0.95
+    AlGuiData.rootLayoutBackColor = 0xE62D2D2D    -- 深灰色背景
+    AlGuiData.rootLayoutStrokeColor = 0xFF555555  -- 灰色边框
+    AlGuiData.menuTopLineColor = 0xFF00AA00       -- Minecraft绿色
+    AlGuiData.menuMainTitleTextColor = 0xFFFFFF55 -- 黄色标题
+    AlGuiData.menuSubTitleTextColor = 0xFFAAAAAA
+    AlGuiData.menuExplanationBackColor = 0x302D2D2D
+    AlGuiData.menuExplanationTextColor = 0xFFAAAAAA
+    AlGuiData.menuScrollBackColor = 0x90212121 -- 更深的背景
+    AlGuiData.menuBottLeftButtonTextColor = 0xFFFFFFFF
+    AlGuiData.menuBottRightButtonTextColor = 0xFFFFFFFF
+    AlGuiData.menuBottRightTriangleColor = 0xFF555555
+
+    gui.updateMenuAppearance()
+    gui.updateMenu()
+
+    -- ============= 🔨 生存便利拓展 =============
+    local survivalModule = gui.addCollapse(
+        gui.getMenuScrollingListLayout(),
+        "🔨 生存便利拓展", 12, 0xFF55FF55, Typeface.create(Typeface.DEFAULT, Typeface.BOLD),
+        5, 0x402D2D2D, 0, 0xFF00AA00,
+        false
+    )
+
+    -- 自动挖矿装置
+    gui.addSwitch(
+        survivalModule,
+        "自动挖矿装置", 11, 0xFFFFFFFF, null,
+        "持续挖掘前方方块", 9, 0xFFAAAAAA, null,
+        0xFF55FF55, 0xFF00AA00, -- 开启颜色
+        0xFFFF5555, 0xFFAA0000, -- 关闭颜色
+        AlGui.T_SwitchOnChangeListener({
+            onClick = function(aSwitch, desc, isChecked)
+                if isChecked then
+                    Inform.showSuccessNotification_Simplicity(null, "自动挖矿", "已启用", 2000)
+                else
+                    Inform.showSuccessNotification_Simplicity(null, "自动挖矿", "已禁用", 2000)
+                end
+            end
+        })
+    )
+
+    -- 快速建造模式
+    gui.addButton(
+        survivalModule,
+        "快速建造模式", 11, 0xFFFFFFFF, null,
+        0, 0xFF5555FF, 1, 0xFF0000AA,
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT,
+        AlGui.T_ButtonOnChangeListener({
+            onClick = function(button, back, buttonText, isChecked)
+                AlGuiDialogBox.showTextDiaLog(context, "建造模板", "请选择要建造的结构模板", "确定")
+            end
+        })
+    )
+
+    -- ============= 🧱 方块与物理调控 =============
+    local physicsModule = gui.addCollapse(
+        gui.getMenuScrollingListLayout(),
+        "🧱 方块与物理调控", 12, 0xFFFFAA00, Typeface.create(Typeface.DEFAULT, Typeface.BOLD),
+        5, 0x402D2D2D, 0, 0xFFAA5500,
+        false
+    )
+
+    -- 方块穿透模式
+    gui.addSwitch(
+        physicsModule,
+        "方块穿透模式", 11, 0xFFFFFFFF, null,
+        "无视方块碰撞", 9, 0xFFAAAAAA, null,
+        0xFF55FFFF, 0xFF00AAAA,
+        0xFFFF5555, 0xFFAA0000,
+        AlGui.T_SwitchOnChangeListener({
+            onClick = function(aSwitch, desc, isChecked)
+                if isChecked then
+                    Inform.showSuccessNotification_Simplicity(null, "穿透模式", "已启用", 2000)
+                else
+                    Inform.showSuccessNotification_Simplicity(null, "穿透模式", "已禁用", 2000)
+                end
+            end
+        })
+    )
+
+    -- 重力调节开关
+    gui.addSwitch(
+        physicsModule,
+        "重力调节开关", 11, 0xFFFFFFFF, null,
+        "控制重力影响", 9, 0xFFAAAAAA, null,
+        0xFF55FFFF, 0xFF00AAAA,
+        0xFFFF5555, 0xFFAA0000,
+        AlGui.T_SwitchOnChangeListener({
+            onClick = function(aSwitch, desc, isChecked)
+                if isChecked then
+                    Inform.showSuccessNotification_Simplicity(null, "重力控制", "已禁用", 2000)
+                else
+                    Inform.showSuccessNotification_Simplicity(null, "重力控制", "已恢复", 2000)
+                end
+            end
+        })
+    )
+
+    -- ============= 🧭 世界探索辅助 =============
+    local exploreModule = gui.addCollapse(
+        gui.getMenuScrollingListLayout(),
+        "🧭 世界探索辅助", 12, 0xFF5555FF, Typeface.create(Typeface.DEFAULT, Typeface.BOLD),
+        5, 0x402D2D2D, 0, 0xFF0000AA,
+        false
+    )
+
+    -- 夜视仪系统
+    gui.addSwitch(
+        exploreModule,
+        "夜视仪系统", 11, 0xFFFFFFFF, null,
+        "黑夜中保持清晰视野", 9, 0xFFAAAAAA, null,
+        0xFFFFFF55, 0xFFAAAA00,
+        0xFFFF5555, 0xFFAA0000,
+        AlGui.T_SwitchOnChangeListener({
+            onClick = function(aSwitch, desc, isChecked)
+                if isChecked then
+                    Inform.showSuccessNotification_Simplicity(null, "夜视仪", "已启用", 2000)
+                else
+                    Inform.showSuccessNotification_Simplicity(null, "夜视仪", "已禁用", 2000)
+                end
+            end
+        })
+    )
+
+    -- ============= 🌤 时间与天气掌控 =============
+    local weatherModule = gui.addCollapse(
+        gui.getMenuScrollingListLayout(),
+        "🌤 时间与天气掌控", 12, 0xFF55FFFF, Typeface.create(Typeface.DEFAULT, Typeface.BOLD),
+        5, 0x402D2D2D, 0, 0xFF00AAAA,
+        false
+    )
+
+    -- 永昼切换器
+    gui.addSwitch(
+        weatherModule,
+        "永昼切换器", 11, 0xFFFFFFFF, null,
+        "锁定为白天", 9, 0xFFAAAAAA, null,
+        0xFFFFFF55, 0xFFAAAA00,
+        0xFFFF5555, 0xFFAA0000,
+        AlGui.T_SwitchOnChangeListener({
+            onClick = function(aSwitch, desc, isChecked)
+                if isChecked then
+                    Inform.showSuccessNotification_Simplicity(null, "永昼模式", "已启用", 2000)
+                else
+                    Inform.showSuccessNotification_Simplicity(null, "永昼模式", "已禁用", 2000)
+                end
+            end
+        })
+    )
+
+    -- ============= 💬 玩家交互系统 =============
+    local chatModule = gui.addCollapse(
+        gui.getMenuScrollingListLayout(),
+        "💬 玩家交互系统", 12, 0xFFFF55FF, Typeface.create(Typeface.DEFAULT, Typeface.BOLD),
+        5, 0x402D2D2D, 0, 0xFFAA00AA,
+        false
+    )
+
+    -- 公屏广播工具
+    gui.addEditText(
+        chatModule,
+        10, null,
+        0xFFAAAAAA, "输入广播内容",
+        0xFFFFFFFF, "",
+        0, 0x802D2D2D, 1, 0xFF555555,
+        0xFFFFFFFF, "发送",
+        0, 0xFF5555FF, 1, 0xFF0000AA,
+        AlGui.T_EditTextOnChangeListener({
+            buttonOnClick = function(edit, button, buttonText, isChecked)
+                local msg = edit.getText()
+                if msg and msg ~= "" then
+                    Inform.showSuccessNotification_Simplicity(null, "广播发送", "内容: " .. msg, 3000)
+                end
+            end
+        })
+    )
+
+    -- ============= 🧰 开发者工具 =============
+    local devModule = gui.addCollapse(
+        gui.getMenuScrollingListLayout(),
+        "🧰 开发者工具", 12, 0xFFFF5555, Typeface.create(Typeface.DEFAULT, Typeface.BOLD),
+        5, 0x402D2D2D, 0, 0xFFAA0000,
+        false
+    )
+
+    -- 实体清理命令
+    gui.addButton(
+        devModule,
+        "清理掉落物", 11, 0xFFFFFFFF, null,
+        0, 0xFFFF5555, 1, 0xFFAA0000,
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT,
+        AlGui.T_ButtonOnChangeListener({
+            onClick = function(button, back, buttonText, isChecked)
+                Inform.showSuccessNotification_Simplicity(null, "清理", "已清除所有掉落物", 2000)
+            end
+        })
+    )
+
+    -- 显示悬浮球
+    gui.showBall()
+
+    -- 初始通知
+    Inform.showCustomizeNotification(
+        0xFF2D2D2D,
+        null, 0,
+        "Minecraft辅助系统", 0xFF55FF55,
+        "所有模块加载完成", 0xFFAAAAAA,
+        3000
+    )
+    AlGuiSoundEffect.getAudio(context).playSoundEffect(AlGuiSoundEffect.INFORM_SUCCESS)
+end, nil, function(err)
+    AlGuiWindowView.clearAllViews(context)
+    print("UI错误: " .. err)
+    luajava.exit()
+end)
