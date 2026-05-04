@@ -184,16 +184,25 @@ body::before{
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255,255,255,0.18);
   box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-  transition: 0.3s ease;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              box-shadow 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+              opacity 0.2s ease;
   min-width: 120px;
   text-align: center;
   margin-bottom: 10px;
   width: 80%;
   max-width: 300px;
+  transform: scale(1);
+  will-change: transform;
 }
 
 .upload-btn:active {
-  transform: scale(0.94);
+  transform: scale(0.88) translateZ(0);
+  opacity: 0.8;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.5),
+              box-shadow 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.5),
+              opacity 0.1s ease;
 }
 
 #uploadBtn {
@@ -241,11 +250,21 @@ body::before{
   border:none;
   padding:6px 14px;
   border-radius:8px;
-  transition: transform 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+              box-shadow 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+              opacity 0.2s ease;
   cursor: pointer;
+  transform: scale(1);
+  will-change: transform;
+  box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
 }
 .del-btn:active{
-  transform: scale(0.9);
+  transform: scale(0.85) translateZ(0);
+  opacity: 0.8;
+  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.2);
+  transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.5),
+              box-shadow 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.5),
+              opacity 0.1s ease;
 }
 
 /* GitHub配置弹窗样式 */
@@ -340,9 +359,12 @@ body::before{
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   backdrop-filter: blur(10px);
   min-width: 100px;
+  transform: scale(1);
+  will-change: transform;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
 .github-btn.primary {
@@ -358,17 +380,20 @@ body::before{
 
 #reconfigGithubBtn:hover {
   background: linear-gradient(135deg, rgba(255, 152, 0, 1), rgba(255, 87, 34, 1));
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.02);
   box-shadow: 0 8px 20px rgba(255, 152, 0, 0.4);
 }
 
 .github-btn:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.02);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 .github-btn:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.92);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0.8;
+  transition: all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.5);
 }
 
 .github-info {
@@ -504,15 +529,20 @@ body::before{
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   min-width: 100px;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: scale(1);
+  will-change: transform;
 }
 
 .custom-alert-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.88);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  opacity: 0.8;
+  transition: all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.5);
 }
 
 .custom-alert-btn.confirm {
@@ -523,6 +553,106 @@ body::before{
 .custom-alert-btn.confirm:hover {
   background: linear-gradient(135deg, rgba(33, 150, 243, 1), rgba(0, 188, 212, 1));
   box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+}
+
+/* 等待提示框样式 */
+.waiting-alert {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5000; /* 比custom-alert更高 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.waiting-alert.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.waiting-alert-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+.waiting-alert-content {
+  position: relative;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 40px 30px 30px;
+  min-width: 280px;
+  max-width: 85%;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  transform: translateY(20px) scale(0.95);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+}
+
+.waiting-alert.active .waiting-alert-content {
+  transform: translateY(0) scale(1);
+}
+
+.waiting-alert-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #2196f3;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+  box-shadow: 0 0 20px rgba(33, 150, 243, 0.3);
+}
+
+.waiting-alert-message {
+  text-align: center;
+  font-size: 18px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.95);
+  padding: 0 8px;
+  font-weight: 500;
+}
+
+.waiting-alert-progress {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  margin-top: 20px;
+  overflow: hidden;
+}
+
+.waiting-alert-progress-bar {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #2196f3, #00bcd4);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  animation: progressPulse 2s infinite;
+}
+
+@keyframes progressPulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* 云端相册样式 */
@@ -572,12 +702,21 @@ body::before{
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: scale(1);
+  will-change: transform;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .cloud-gallery-close:hover {
   background: rgba(255, 255, 255, 0.2);
-  transform: rotate(90deg);
+  transform: rotate(90deg) scale(1.1);
+}
+
+.cloud-gallery-close:active {
+  transform: rotate(90deg) scale(0.9);
+  opacity: 0.8;
+  transition: all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.5);
 }
 
 .cloud-gallery-content {
@@ -660,8 +799,11 @@ body::before{
   border: none;
   font-size: 11px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   min-width: 60px;
+  transform: scale(1);
+  will-change: transform;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .cloud-action-btn.view {
@@ -676,7 +818,15 @@ body::before{
 
 .cloud-action-btn:hover {
   transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   opacity: 0.9;
+}
+
+.cloud-action-btn:active {
+  transform: scale(0.9);
+  opacity: 0.8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.5);
 }
 
 .cloud-empty {
@@ -705,10 +855,6 @@ body::before{
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 20px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 </style>
 </head>
@@ -809,6 +955,18 @@ body::before{
   </div>
 </div>
 
+<!-- 等待提示框 - 新增 -->
+<div id="waitingAlert" class="waiting-alert">
+  <div class="waiting-alert-overlay"></div>
+  <div class="waiting-alert-content">
+    <div class="waiting-alert-spinner"></div>
+    <div class="waiting-alert-message" id="waitingMessage">正在上传到GitHub，请稍等...</div>
+    <div class="waiting-alert-progress">
+      <div class="waiting-alert-progress-bar" id="waitingProgressBar"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 const uploadBtn = document.getElementById('uploadBtn');
 const saveToGitHubBtn = document.getElementById('saveToGitHubBtn');
@@ -843,6 +1001,11 @@ const customAlert = document.getElementById('customAlert');
 const alertMessage = document.getElementById('alertMessage');
 const alertConfirm = document.getElementById('alertConfirm');
 const alertOverlay = document.querySelector('.custom-alert-overlay');
+
+// 等待提示框元素 - 新增
+const waitingAlert = document.getElementById('waitingAlert');
+const waitingMessage = document.getElementById('waitingMessage');
+const waitingProgressBar = document.getElementById('waitingProgressBar');
 
 const canvas = document.getElementById('colorCanvas');
 const ctx = canvas.getContext('2d');
@@ -1085,6 +1248,31 @@ function hideAlert() {
   document.body.style.overflow = 'auto';
 }
 
+// 显示等待提示框 - 新增
+function showWaiting(message = '正在上传到GitHub，请稍等...') {
+  waitingMessage.textContent = message;
+  waitingProgressBar.style.width = '0%';
+  waitingAlert.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+// 更新等待提示框进度 - 新增
+function updateWaitingProgress(current, total, message) {
+  const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
+  waitingProgressBar.style.width = `${percentage}%`;
+  if (message) {
+    waitingMessage.textContent = `${message} (${current}/${total})`;
+  }
+}
+
+// 隐藏等待提示框 - 新增
+function hideWaiting() {
+  waitingAlert.classList.remove('active');
+  setTimeout(() => {
+    document.body.style.overflow = 'auto';
+  }, 300);
+}
+
 // 将文件转换为Base64
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -1143,14 +1331,19 @@ async function uploadToGitHub() {
     return;
   }
   
-  showGitHubStatus('开始上传到GitHub...', 'loading');
+  // 显示等待提示框
+  showWaiting('正在上传到GitHub，请稍等...');
   
   let successCount = 0;
   let errorCount = 0;
   const results = [];
+  const totalFiles = uploadedFiles.length;
   
-  for (let i = 0; i < uploadedFiles.length; i++) {
+  for (let i = 0; i < totalFiles; i++) {
     const fileInfo = uploadedFiles[i];
+    
+    // 更新进度
+    updateWaitingProgress(i, totalFiles, '正在上传文件');
     
     try {
       const timestamp = Date.now();
@@ -1197,7 +1390,6 @@ async function uploadToGitHub() {
           path: path,
           status: 'success'
         });
-        showGitHubStatus(`上传中... ${i + 1}/${uploadedFiles.length}`, 'loading');
       } else {
         errorCount++;
         results.push({
@@ -1217,22 +1409,28 @@ async function uploadToGitHub() {
     }
   }
   
-  if (successCount > 0) {
-    let resultMessage = `上传完成！\n成功: ${successCount} 个文件\n失败: ${errorCount} 个文件\n\n`;
-    
-    if (results.filter(r => r.status === 'success').length > 0) {
-      resultMessage += "成功文件链接:\n";
-      results.filter(r => r.status === 'success').forEach(r => {
-        resultMessage += `• ${r.name}: ${r.url}\n`;
-      });
+  // 隐藏等待提示框
+  hideWaiting();
+  
+  // 短暂延迟后显示结果
+  setTimeout(() => {
+    if (successCount > 0) {
+      let resultMessage = `上传完成！\n成功: ${successCount} 个文件\n失败: ${errorCount} 个文件\n\n`;
+      
+      if (results.filter(r => r.status === 'success').length > 0) {
+        resultMessage += "成功文件链接:\n";
+        results.filter(r => r.status === 'success').forEach(r => {
+          resultMessage += `• ${r.name}: ${r.url}\n`;
+        });
+      }
+      
+      showGitHubStatus(`上传完成！成功: ${successCount} 个，失败: ${errorCount} 个`, 'success');
+      showAlert(resultMessage);
+    } else {
+      showGitHubStatus(`上传失败，请检查配置和网络`, 'error');
+      showAlert('上传失败！\n可能原因：\n1. Token无效或已过期\n2. 仓库不存在\n3. 没有写入权限\n4. 网络连接问题\n\n请检查GitHub配置。');
     }
-    
-    showGitHubStatus(`上传完成！成功: ${successCount} 个，失败: ${errorCount} 个`, 'success');
-    showAlert(resultMessage);
-  } else {
-    showGitHubStatus(`上传失败，请检查配置和网络`, 'error');
-    showAlert('上传失败！\n可能原因：\n1. Token无效或已过期\n2. 仓库不存在\n3. 没有写入权限\n4. 网络连接问题\n\n请检查GitHub配置。');
-  }
+  }, 300);
 }
 
 // 获取云端文件列表
