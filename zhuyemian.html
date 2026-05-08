@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主页面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, 
+                rgba(180, 220, 255, 0.35), 
+                rgba(220, 240, 255, 0.35));
+            animation: bgFlow 12s ease-in-out infinite alternate;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            position: relative;
+        }
+
+        @keyframes bgFlow {
+            0% {
+                background: linear-gradient(135deg, 
+                    rgba(180, 220, 255, 0.35), 
+                    rgba(220, 240, 255, 0.35));
+            }
+            50% {
+                background: linear-gradient(135deg, 
+                    rgba(160, 210, 255, 0.4), 
+                    rgba(200, 230, 255, 0.4));
+            }
+            100% {
+                background: linear-gradient(135deg, 
+                    rgba(190, 230, 255, 0.32), 
+                    rgba(230, 245, 255, 0.32));
+            }
+        }
+
+        .btn-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .glass-btn {
+            padding: 18px 10px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 4px 16px rgba(30, 140, 255, 0.1);
+            font-size: 16px;
+            color: #187bcd;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            animation: btnFade 12s ease-in-out infinite alternate;
+            outline: none;
+        }
+
+        .glass-btn:focus {
+            outline: none;
+        }
+
+        @keyframes btnFade {
+            0% { opacity: 0.85; }
+            50% { opacity: 1; }
+            100% { opacity: 0.88; }
+        }
+
+        .glass-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(30, 140, 255, 0.15);
+        }
+
+        .glass-btn:active {
+            transform: scale(0.96);
+            box-shadow: 0 2px 8px rgba(30, 140, 255, 0.1);
+        }
+
+        /* 加载遮罩 */
+        .loading-mask {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .loading-box {
+            width: 100px;
+            height: 100px;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 16px rgba(31, 135, 255, 0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        .loading-box.end-close {
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        .loading-flow-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 300%;
+            height: 300%;
+            background: linear-gradient(
+                45deg,
+                rgba(100, 180, 255, 0.08),
+                rgba(150, 210, 255, 0.12),
+                rgba(80, 160, 255, 0.08),
+                rgba(120, 190, 255, 0.12)
+            );
+            animation: flowMove 8s linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes flowMove {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .loading-progress-wrap {
+            width: 70px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            z-index: 2;
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #409eff, #69b1ff);
+            border-radius: 4px;
+            transition: width 0.05s linear;
+        }
+    </style>
+</head>
+<body>
+    <div class="btn-container">
+        <button class="glass-btn" id="btn1">Github云端图库</button>
+        <button class="glass-btn" id="btn2">随机图片</button>
+        <button class="glass-btn" id="btn3">每日一言</button>
+        <button class="glass-btn">按钮4</button>
+        <button class="glass-btn">按钮5</button>
+        <button class="glass-btn">按钮6</button>
+    </div>
+
+    <div class="loading-mask" id="loadingMask">
+        <div class="loading-box" id="loadingBox">
+            <div class="loading-flow-bg"></div>
+            <div class="loading-progress-wrap">
+                <div class="loading-progress-bar" id="loadingBar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const mask = document.getElementById('loadingMask');
+        const box = document.getElementById('loadingBox');
+        const bar = document.getElementById('loadingBar');
+        const btn1 = document.getElementById('btn1');
+        const btn2 = document.getElementById('btn2');
+        const btn3 = document.getElementById('btn3');
+        const otherBtns = document.querySelectorAll('.glass-btn:not(#btn1):not(#btn2):not(#btn3)');
+
+        // 通用加载函数（支持自定义跳转地址）
+        function startLoad(jumpUrl = null) {
+            box.classList.remove('end-close');
+            bar.style.width = '0%';
+            mask.style.display = 'flex';
+
+            let num = 0;
+            const totalTime = 500;
+            const stepTime = totalTime / 100;
+
+            function simulateLoad() {
+                if (num <= 100) {
+                    bar.style.width = num + '%';
+                    num++;
+                    setTimeout(simulateLoad, stepTime);
+                } else {
+                    setTimeout(() => {
+                        box.classList.add('end-close');
+                        setTimeout(() => {
+                            mask.style.display = 'none';
+                            // 加载完成后跳转指定页面
+                            if(jumpUrl){
+                                location.href = jumpUrl;
+                            }
+                        }, 500);
+                    }, 100);
+                }
+            }
+            simulateLoad();
+        }
+
+        // 按钮1：跳转html2.html
+        btn1.addEventListener('click', ()=>{
+            startLoad("html2.html");
+        });
+
+        // 按钮2：跳转tp.html
+        btn2.addEventListener('click', ()=>{
+            startLoad("tp.html");
+        });
+
+        // 按钮3：跳转yy.html
+        btn3.addEventListener('click', ()=>{
+            startLoad("yy.html");
+        });
+
+        // 其他按钮：只加载不跳转
+        otherBtns.forEach(btn=>{
+            btn.addEventListener('click', ()=>{
+                startLoad(null);
+            });
+        });
+    </script>
+</body>
+</html>
