@@ -174,9 +174,11 @@
         <button class="glass-btn" id="btn1">Github云端图库</button>
         <button class="glass-btn" id="btn2">随机图片</button>
         <button class="glass-btn" id="btn3">每日一言</button>
-        <button class="glass-btn">按钮4</button>
-        <button class="glass-btn">按钮5</button>
-        <button class="glass-btn">按钮6</button>
+        <button class="glass-btn" id="btn4">每日60s</button>
+        <!-- 修改按钮5：跳转到an.html -->
+        <button class="glass-btn" id="btn5">答案之书</button>
+        <!-- 修改按钮6：跳转到wy.html -->
+        <button class="glass-btn" id="btn6">网易云音乐解析</button>
     </div>
 
     <div class="loading-mask" id="loadingMask">
@@ -195,7 +197,9 @@
         const btn1 = document.getElementById('btn1');
         const btn2 = document.getElementById('btn2');
         const btn3 = document.getElementById('btn3');
-        const otherBtns = document.querySelectorAll('.glass-btn:not(#btn1):not(#btn2):not(#btn3)');
+        const btn4 = document.getElementById('btn4');
+        const btn5 = document.getElementById('btn5'); // 新增按钮5
+        const btn6 = document.getElementById('btn6'); // 新增按钮6
 
         // 通用加载函数（支持自定义跳转地址）
         function startLoad(jumpUrl = null) {
@@ -243,11 +247,19 @@
             startLoad("yy.html");
         });
 
-        // 其他按钮：只加载不跳转
-        otherBtns.forEach(btn=>{
-            btn.addEventListener('click', ()=>{
-                startLoad(null);
-            });
+        // 按钮4：跳转60.html
+        btn4.addEventListener('click', ()=>{
+            startLoad("60.html");
+        });
+
+        // 按钮5：跳转an.html（新增）
+        btn5.addEventListener('click', ()=>{
+            startLoad("an.html");
+        });
+
+        // 按钮6：跳转wy.html（新增）
+        btn6.addEventListener('click', ()=>{
+            startLoad("wy.html");
         });
     </script>
 </body>
