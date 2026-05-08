@@ -1,0 +1,135 @@
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加载中</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #c1e4ff, #e0f2ff);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.6s ease;
+        }
+
+        .load-box {
+            width: 180px;
+            height: 180px;
+            border-radius: 24px;
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 32px rgba(31, 135, 255, 0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        /* 加载完成：缩成圆形+渐隐（保留原逻辑） */
+        .load-box.end-close {
+            transform: scale(0);
+            opacity: 0;
+            border-radius: 50%;
+        }
+
+        .flow-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 300%;
+            height: 300%;
+            background: linear-gradient(
+                45deg,
+                rgba(100, 180, 255, 0.08),
+                rgba(150, 210, 255, 0.12),
+                rgba(80, 160, 255, 0.08),
+                rgba(120, 190, 255, 0.12)
+            );
+            animation: flowMove 8s linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes flowMove {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* 单小球Windows风格加载动画 */
+        .win-loader {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            z-index: 2;
+        }
+        .dot {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #ffffff;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            margin: -10px 0 0 -10px;
+            /* 循环播放旋转+弹跳动画，匹配Windows加载效果 */
+            animation: dotSpinBounce 0.8s linear infinite;
+        }
+
+        @keyframes dotSpinBounce {
+            0% {
+                transform: rotate(0deg) translateY(-20px) scale(0.8);
+                opacity: 0.3;
+            }
+            25% {
+                transform: rotate(90deg) translateY(-20px) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: rotate(180deg) translateY(-20px) scale(0.8);
+                opacity: 0.3;
+            }
+            75% {
+                transform: rotate(270deg) translateY(-20px) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: rotate(360deg) translateY(-20px) scale(0.8);
+                opacity: 0.3;
+            }
+        }
+    </style>
+    <script src="js/jq.js"></script>
+</head>
+<body id="v1">
+    <div class="load-box" id="loadBox">
+        <div id="v2" class="flow-bg"></div>
+        <!-- 替换为单小球加载动画 -->
+        <div class="win-loader">
+            <div class="dot"></div>
+        </div>
+    </div>
+
+    <script>
+        const loadBox = document.getElementById('loadBox');
+
+        // 固定1.5秒加载完成，触发收尾动画和跳转
+        setTimeout(() => {
+            loadBox.classList.add('end-close');
+            // 保留原逻辑：动画结束后跳转到主页面
+            setTimeout(() => {
+                location.href = "zhuyemian.html";
+            }, 600);
+        }, 1500);
+    </script>  
+</body>
+</html>
