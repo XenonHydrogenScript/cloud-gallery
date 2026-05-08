@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机壁纸</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, "Microsoft Yahei", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(145deg, #fff9d8, #ffeab6);
+            padding: 20px;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(220, 180, 50, 0.18);
+            transition: all 0.25s ease;
+        }
+
+        .img-box {
+            width: 100%;
+            max-width: 380px;
+            min-height: 220px;
+            padding: 12px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #randomImg {
+            max-width: 100%;
+            max-height: 380px;
+            border-radius: 12px;
+            display: none;
+            object-fit: cover;
+            transition: opacity 0.3s ease, filter 0.3s ease;
+        }
+
+        .loading {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #5a4300;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 自定义选择框容器 */
+        .custom-select-container {
+            position: relative;
+            display: inline-block;
+            margin: 0 6px;
+        }
+
+        /* 自定义选择框触发器 */
+        .custom-select-trigger {
+            height: 50px;
+            min-width: 160px;
+            padding: 0 40px 0 16px;
+            font-size: 15px;
+            color: #5a4300;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            
+            /* 毛玻璃效果 */
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(220, 180, 50, 0.15);
+            transition: all 0.25s ease;
+        }
+
+        .custom-select-trigger:hover {
+            background: rgba(255, 255, 255, 0.32);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 180, 50, 0.2);
+        }
+
+        .custom-select-trigger:active {
+            transform: scale(0.98);
+        }
+
+        /* 下拉箭头 */
+        .custom-select-arrow {
+            position: absolute;
+            right: 16px;
+            width: 10px;
+            height: 10px;
+            border-right: 2px solid #5a4300;
+            border-bottom: 2px solid #5a4300;
+            transform: rotate(45deg);
+            transition: transform 0.3s ease;
+            pointer-events: none;
+        }
+
+        .custom-select-container.open .custom-select-arrow {
+            transform: rotate(-135deg);
+        }
+
+        /* 下拉选项面板 */
+        .custom-select-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            width: 100%;
+            min-width: 180px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            
+            /* 毛玻璃效果 */
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(220, 180, 50, 0.25);
+        }
+
+        .custom-select-container.open .custom-select-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        /* 选项样式 */
+        .custom-select-option {
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #5a4300;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .custom-select-option:last-child {
+            border-bottom: none;
+        }
+
+        .custom-select-option:hover {
+            background: rgba(255, 255, 255, 0.4);
+            padding-left: 20px;
+        }
+
+        .custom-select-option.selected {
+            background: rgba(255, 255, 255, 0.5);
+            font-weight: 600;
+            position: relative;
+        }
+
+        .custom-select-option.selected::after {
+            content: '✓';
+            position: absolute;
+            right: 16px;
+            color: #5a4300;
+        }
+
+        /* 隐藏原生select */
+        .hidden-select {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            width: 0;
+            height: 0;
+            overflow: hidden;
+        }
+
+        .select-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* 增强版按钮样式 */
+        #loadBtn {
+            width: 200px;
+            height: 60px;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            border: none;
+            cursor: pointer;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            
+            /* 反色背景 */
+            background: rgba(90, 67, 0, 0.85);
+            
+            /* 扭曲边缘效果 */
+            border-radius: 16px;
+            clip-path: polygon(
+                0% 15%, 5% 0%, 15% 0%, 20% 5%, 
+                80% 5%, 85% 0%, 95% 0%, 100% 15%,
+                100% 85%, 95% 100%, 85% 100%, 80% 95%,
+                20% 95%, 15% 100%, 5% 100%, 0% 85%
+            );
+            
+            /* 多层阴影+高光 */
+            box-shadow: 
+                /* 外层阴影 */
+                0 10px 30px rgba(90, 67, 0, 0.4),
+                /* 中层阴影 */
+                0 5px 15px rgba(90, 67, 0, 0.3),
+                /* 内层高光 */
+                inset 0 2px 10px rgba(255, 255, 255, 0.5),
+                /* 边缘高光 */
+                inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+                /* 底部反光 */
+                inset 0 -3px 8px rgba(255, 255, 255, 0.2);
+            
+            /* 背景模糊 */
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            
+            /* 文字阴影 */
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #loadBtn:hover {
+            background: rgba(110, 82, 0, 0.9);
+            transform: translateY(-4px) scale(1.02);
+            
+            box-shadow: 
+                /* 增强的外层阴影 */
+                0 15px 40px rgba(90, 67, 0, 0.5),
+                /* 增强的中层阴影 */
+                0 8px 20px rgba(90, 67, 0, 0.4),
+                /* 增强的内层高光 */
+                inset 0 3px 12px rgba(255, 255, 255, 0.6),
+                /* 增强的边缘高光 */
+                inset 0 0 0 1px rgba(255, 255, 255, 0.4),
+                /* 增强的底部反光 */
+                inset 0 -4px 10px rgba(255, 255, 255, 0.3);
+        }
+
+        #loadBtn:active {
+            transform: translateY(0) scale(0.96);
+            
+            box-shadow: 
+                /* 压扁的阴影 */
+                0 5px 15px rgba(90, 67, 0, 0.3),
+                /* 减弱的内层高光 */
+                inset 0 1px 5px rgba(255, 255, 255, 0.3),
+                /* 减弱的边缘高光 */
+                inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+                /* 减弱的底部反光 */
+                inset 0 -2px 5px rgba(255, 255, 255, 0.1);
+        }
+
+        /* 按钮光泽动画 */
+        #loadBtn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.4),
+                transparent
+            );
+            transition: left 0.5s ease;
+        }
+
+        #loadBtn:hover::before {
+            left: 100%;
+        }
+
+        /* 按钮内部光晕效果 */
+        #loadBtn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+        }
+
+        #loadBtn:active::after {
+            width: 200%;
+            height: 200%;
+        }
+    </style>
+</head>
+<body>
+    <div class="glass img-box">
+        <div class="loading" id="loadingSpinner"></div>
+        <img id="randomImg" alt="随机壁纸">
+    </div>
+
+    <div class="select-group">
+        <!-- 分类选择框 -->
+        <div class="custom-select-container" id="categorySelect">
+            <div class="custom-select-trigger">
+                <span class="custom-select-value">全局随机</span>
+                <span class="custom-select-arrow"></span>
+            </div>
+            <div class="custom-select-dropdown">
+                <!-- 选项将通过JS动态生成 -->
+            </div>
+            <select class="hidden-select" id="category">
+                <option value="">全局随机</option>
+                <option value="acg">二次元动漫</option>
+                <option value="landscape">风景</option>
+                <option value="anime">混合动漫</option>
+                <option value="general_anime">动漫图</option>
+                <option value="mobile_wallpaper">手机壁纸</option>
+                <option value="pc_wallpaper">电脑壁纸</option>
+                <option value="ai_drawing">AI绘画</option>
+                <option value="furry">福瑞</option>
+                <option value="bq">表情包</option>
+            </select>
+        </div>
+
+        <!-- 子分类选择框 -->
+        <div class="custom-select-container" id="typeSelect" style="display:none;">
+            <div class="custom-select-trigger">
+                <span class="custom-select-value">选择子分类</span>
+                <span class="custom-select-arrow"></span>
+            </div>
+            <div class="custom-select-dropdown">
+                <!-- 选项将通过JS动态生成 -->
+            </div>
+            <select class="hidden-select" id="type"></select>
+        </div>
+    </div>
+
+    <button class="glass" id="loadBtn">获取随机图片</button>
+
+    <script>
+        const categorySelect = document.getElementById('categorySelect');
+        const typeSelect = document.getElementById('typeSelect');
+        const categoryHidden = document.getElementById('category');
+        const typeHidden = document.getElementById('type');
+        const loadBtn = document.getElementById('loadBtn');
+        const imgEl = document.getElementById('randomImg');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const API = 'https://uapis.cn/api/v1/random/image';
+
+        const typeMap = {
+            acg: [{ label: '电脑端', val: 'pc' }, { label: '手机端', val: 'mb' }],
+            furry: [
+                { label: '4K', val: '4k' }, { label: '4K竖屏', val: 'z4k' },
+                { label: '8K超宽', val: 'szs8k' }, { label: '4K超宽', val: 's4k' }
+            ],
+            bq: [
+                { label: '野兽', val: 'youshou' }, { label: '熊猫', val: 'xiongmao' },
+                { label: '外国人', val: 'waiguoren' }, { label: '猫猫', val: 'maomao' },
+                { label: 'ikun', val: 'ikun' }, { label: '二次元', val: 'eciyuan' }
+            ]
+        };
+
+        // 初始化自定义选择框
+        function initCustomSelect(container, hiddenSelect) {
+            const trigger = container.querySelector('.custom-select-trigger');
+            const dropdown = container.querySelector('.custom-select-dropdown');
+            const valueDisplay = container.querySelector('.custom-select-value');
+            
+            // 生成选项
+            function generateOptions() {
+                dropdown.innerHTML = '';
+                Array.from(hiddenSelect.options).forEach(option => {
+                    const optionElement = document.createElement('div');
+                    optionElement.className = 'custom-select-option';
+                    if (option.selected) optionElement.classList.add('selected');
+                    optionElement.textContent = option.textContent;
+                    optionElement.dataset.value = option.value;
+                    
+                    optionElement.addEventListener('click', (e) => {
+                        e.stopPropagation(); // 阻止事件冒泡
+                        
+                        // 更新隐藏的select
+                        hiddenSelect.value = option.value;
+                        
+                        // 更新显示的值
+                        valueDisplay.textContent = option.textContent;
+                        
+                        // 更新选中状态
+                        dropdown.querySelectorAll('.custom-select-option').forEach(opt => {
+                            opt.classList.remove('selected');
+                        });
+                        optionElement.classList.add('selected');
+                        
+                        // 🔧 修复：立即关闭下拉框
+                        container.classList.remove('open');
+                        
+                        // 触发change事件
+                        hiddenSelect.dispatchEvent(new Event('change'));
+                    });
+                    
+                    dropdown.appendChild(optionElement);
+                });
+            }
+            
+            // 点击触发器打开/关闭下拉框
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                
+                // 关闭其他打开的选择框
+                document.querySelectorAll('.custom-select-container.open').forEach(openContainer => {
+                    if (openContainer !== container) {
+                        openContainer.classList.remove('open');
+                    }
+                });
+                
+                container.classList.toggle('open');
+            });
+            
+            // 初始化选项
+            generateOptions();
+            
+            // 监听隐藏select的变化
+            hiddenSelect.addEventListener('change', () => {
+                const selectedOption = hiddenSelect.options[hiddenSelect.selectedIndex];
+                valueDisplay.textContent = selectedOption.textContent;
+                generateOptions();
+            });
+            
+            return { generateOptions };
+        }
+
+        // 初始化两个选择框
+        const categoryCustom = initCustomSelect(categorySelect, categoryHidden);
+        const typeCustom = initCustomSelect(typeSelect, typeHidden);
+
+        // 点击页面其他地方关闭下拉框
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.custom-select-container').forEach(container => {
+                container.classList.remove('open');
+            });
+        });
+
+        // 分类改变时更新子分类
+        categoryHidden.addEventListener('change', () => {
+            const cat = categoryHidden.value;
+            
+            // 清空子分类
+            typeHidden.innerHTML = '';
+            typeSelect.style.display = 'none';
+            
+            if (typeMap[cat]) {
+                typeSelect.style.display = 'block';
+                
+                // 添加选项到隐藏的select
+                typeMap[cat].forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.val;
+                    opt.textContent = item.label;
+                    typeHidden.appendChild(opt);
+                });
+                
+                // 更新自定义选择框
+                typeCustom.generateOptions();
+                
+                // 默认选择第一个
+                typeHidden.value = typeMap[cat][0].val;
+                typeHidden.dispatchEvent(new Event('change'));
+            }
+        });
+
+        // 加载随机图片
+        loadBtn.addEventListener('click', () => {
+            loadingSpinner.style.display = 'block';
+            imgEl.style.display = 'none';
+            imgEl.style.opacity = '0';
+            imgEl.style.filter = 'blur(10px)';
+
+            let url = new URL(API);
+            const cat = categoryHidden.value;
+            const type = typeHidden.value;
+            
+            if (cat) url.searchParams.set('category', cat);
+            if (type) url.searchParams.set('type', type);
+            
+            // 添加时间戳防止缓存
+            url.searchParams.set('_t', Date.now());
+
+            imgEl.src = url.href;
+        });
+
+        imgEl.onload = () => {
+            loadingSpinner.style.display = 'none';
+            imgEl.style.display = 'block';
+            
+            requestAnimationFrame(() => {
+                imgEl.style.opacity = '1';
+                imgEl.style.filter = 'blur(0)';
+            });
+        };
+
+        imgEl.onerror = () => {
+            loadingSpinner.style.display = 'none';
+            alert('图片加载失败，请更换分类');
+            imgEl.style.display = 'none';
+        };
+    </script>
+</body>
+</html>
