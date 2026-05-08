@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日一言</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, "Microsoft Yahei", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(145deg, #fff9d8, #ffeab6);
+            background-attachment: fixed;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(220, 180, 50, 0.18);
+            transition: all 0.25s ease;
+        }
+
+        .saying-box {
+            width: 360px;
+            min-height: 100px;
+            padding: 28px;
+            margin-bottom: 35px;
+            color: #5a4300;
+            font-size: 18px;
+            line-height: 1.6;
+            text-align: center;
+            display: none;
+            /* 👇 新增：文本变化的过渡属性 */
+            transition: filter 0.3s ease, text-shadow 0.3s ease, opacity 0.3s ease;
+        }
+
+        /* 按钮样式保持不变 */
+        #getBtn {
+            width: 180px;
+            height: 54px;
+            font-size: 17px;
+            border: none;
+            cursor: pointer;
+            color: #fff;
+            background: rgba(90, 67, 0, 0.35);
+            border-radius: 24px;
+            box-shadow: 
+                0 8px 20px rgba(90, 67, 0, 0.25),
+                inset 0 2px 6px rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: all 0.25s ease;
+        }
+
+        #getBtn:hover {
+            background: rgba(90, 67, 0, 0.45);
+            transform: translateY(-3px);
+            box-shadow: 
+                0 12px 30px rgba(90, 67, 0, 0.3),
+                inset 0 2px 8px rgba(255, 255, 255, 0.5);
+        }
+
+        #getBtn:active {
+            transform: scale(0.95) translateY(0);
+            box-shadow: 
+                0 4px 12px rgba(90, 67, 0, 0.2),
+                inset 0 1px 4px rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="glass saying-box" id="sayingBox"></div>
+    <button id="getBtn">获取随机一言</button>
+
+    <script>
+        const sayingBox = document.getElementById('sayingBox');
+        const getBtn = document.getElementById('getBtn');
+        const API_URL = 'https://uapis.cn/api/v1/saying';
+
+        getBtn.addEventListener('click', async () => {
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                
+                sayingBox.style.display = 'block';
+                // 👇 触发高光模糊效果（更新文本前）
+                sayingBox.style.filter = 'blur(5px)';
+                sayingBox.style.textShadow = '0 0 15px rgba(255, 255, 255, 0.9)';
+                sayingBox.style.opacity = '0.7';
+                // 更新文本内容
+                sayingBox.innerText = data.text || '获取失败，请重试';
+                // 👇 延迟恢复到清晰状态
+                setTimeout(() => {
+                    sayingBox.style.filter = 'blur(0)';
+                    sayingBox.style.textShadow = 'none';
+                    sayingBox.style.opacity = '1';
+                }, 50);
+
+            } catch (err) {
+                sayingBox.style.display = 'block';
+                // 👇 错误时的高光（偏暖红，区分正常状态）
+                sayingBox.style.filter = 'blur(5px)';
+                sayingBox.style.textShadow = '0 0 15px rgba(255, 200, 200, 0.9)';
+                sayingBox.style.opacity = '0.7';
+                sayingBox.innerText = '网络异常，请稍后再试';
+                setTimeout(() => {
+                    sayingBox.style.filter = 'blur(0)';
+                    sayingBox.style.textShadow = 'none';
+                    sayingBox.style.opacity = '1';
+                }, 50);
+                console.error(err);
+            }
+        });
+    </script>
+</body>
+</html>
