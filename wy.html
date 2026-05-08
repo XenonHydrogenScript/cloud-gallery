@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网易云音乐解析器</title>
+    <style>
+        :root {
+            --bg-color: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: rgba(255, 255, 255, 0.15);
+            --text-color: #fff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --border-color: rgba(255, 255, 255, 0.2);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            --font-size: 16px;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            --card-bg: rgba(0, 0, 0, 0.3);
+            --text-color: #e0e0e0;
+            --text-secondary: rgba(224, 224, 224, 0.7);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            color: var(--text-color);
+            padding: 20px;
+            font-size: var(--font-size);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .input-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .input-field:focus {
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+        }
+
+        .input-hint {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .parse-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--text-color);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+        }
+
+        .parse-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .parse-btn:active {
+            transform: scale(0.98);
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .music-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .cover {
+            width: 200px;
+            height: 200px;
+            border-radius: 15px;
+            object-fit: cover;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .song-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+
+        .singer, .album {
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .meta {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .lyrics {
+            white-space: pre-wrap;
+            line-height: 1.8;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            color: #ff6b6b;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+                font-size: calc(var(--font-size) * 0.9);
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .cover {
+                width: 160px;
+                height: 160px;
+            }
+            
+            .song-name {
+                font-size: 1.5rem;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>网易云音乐解析器</h1>
+            <p class="subtitle">输入音乐ID或链接，获取音乐信息与歌词</p>
+        </header>
+
+        <main>
+            <!-- 输入区域 -->
+            <div class="input-card">
+                <div class="input-group">
+                    <label for="musicInput">音乐ID或链接</label>
+                    <input 
+                        type="text" 
+                        id="musicInput" 
+                        class="input-field" 
+                        placeholder="输入网易云音乐ID或完整链接"
+                        value="2618165651"
+                    >
+                    <div class="input-hint">
+                        示例：2618165651 或 https://music.163.com/song?id=2618165651
+                    </div>
+                </div>
+                <button class="parse-btn" onclick="parseMusic()">
+                    🎵 解析音乐
+                </button>
+            </div>
+
+            <!-- 内容区域 -->
+            <div id="content"></div>
+            
+            <div class="card">
+                <div class="controls">
+                    <button class="btn" onclick="loadDefault()">
+                        🔄 恢复默认
+                    </button>
+                    <button class="btn" onclick="copyLyrics()">
+                        📋 复制歌词
+                    </button>
+                    <button class="btn" onclick="copyApiUrl()">
+                        🔗 复制接口
+                    </button>
+                    <button class="btn" onclick="toggleTheme()">
+                        🌓 日夜模式
+                    </button>
+                    <button class="btn" onclick="changeFontSize(1)">
+                        🔍+ 放大字体
+                    </button>
+                    <button class="btn" onclick="changeFontSize(-1)">
+                        🔍- 缩小字体
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>数据来源：PearAPI · 接口ID: 320</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const DEFAULT_MUSIC_ID = '2618165651';
+        const BASE_API_URL = 'https://api.pearapi.ai/api/cloudmusic/?url=';
+        let currentData = null;
+        let isDarkMode = false;
+
+        // 显示提示消息
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // 切换日夜模式
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+            showToast(isDarkMode ? '已切换到夜间模式' : '已切换到日间模式');
+        }
+
+        // 改变字体大小
+        function changeFontSize(delta) {
+            const root = document.documentElement;
+            const currentSize = parseFloat(getComputedStyle(root).getPropertyValue('--font-size'));
+            const newSize = Math.max(12, Math.min(24, currentSize + delta));
+            root.style.setProperty('--font-size', `${newSize}px`);
+            showToast(`字体大小: ${Math.round(newSize)}px`);
+        }
+
+        // 复制歌词
+        function copyLyrics() {
+            if (!currentData?.data?.lyric) {
+                showToast('暂无歌词可复制');
+                return;
+            }
+            
+            navigator.clipboard.writeText(currentData.data.lyric)
+                .then(() => showToast('歌词已复制到剪贴板'))
+                .catch(err => {
+                    console.error('复制失败:', err);
+                    showToast('复制失败，请手动选择');
+                });
+        }
+
+        // 复制接口地址
+        function copyApiUrl() {
+            const musicId = document.getElementById('musicInput').value.trim();
+            const apiUrl = constructApiUrl(musicId);
+            
+            navigator.clipboard.writeText(apiUrl)
+                .then(() => showToast('接口地址已复制'))
+                .catch(err => {
+                    console.error('复制失败:', err);
+                    showToast('复制失败');
+                });
+        }
+
+        // 构造API URL
+        function constructApiUrl(input) {
+            let musicUrl;
+            
+            // 判断输入是ID还是URL
+            if (/^\d+$/.test(input)) {
+                // 纯数字ID
+                musicUrl = `https://music.163.com/song?id=${input}`;
+            } else if (input.includes('music.163.com')) {
+                // 完整URL
+                musicUrl = input;
+            } else {
+                // 默认使用示例ID
+                musicUrl = `https://music.163.com/song?id=${DEFAULT_MUSIC_ID}`;
+            }
+            
+            return `${BASE_API_URL}${encodeURIComponent(musicUrl)}`;
+        }
+
+        // 解析音乐
+        function parseMusic() {
+            const input = document.getElementById('musicInput').value.trim();
+            
+            if (!input) {
+                showToast('请输入音乐ID或链接');
+                return;
+            }
+            
+            loadMusicData(input);
+        }
+
+        // 加载默认音乐
+        function loadDefault() {
+            document.getElementById('musicInput').value = DEFAULT_MUSIC_ID;
+            loadMusicData(DEFAULT_MUSIC_ID);
+        }
+
+        // 加载音乐数据
+        async function loadMusicData(input) {
+            showLoading();
+            
+            try {
+                const apiUrl = constructApiUrl(input);
+                console.log('请求API:', apiUrl);
+                
+                // 添加时间戳防止缓存
+                const urlWithTimestamp = `${apiUrl}&t=${Date.now()}`;
+                
+                const response = await fetch(urlWithTimestamp, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    mode: 'cors'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP错误: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                renderMusic(data);
+            } catch (error) {
+                console.error('请求失败:', error);
+                document.getElementById('content').innerHTML = `
+                    <div class="card error">
+                        <h3>⚠️ 网络请求失败</h3>
+                        <p>${error.message}</p>
+                        <p style="margin-top: 10px; font-size: 0.9em;">请检查网络连接或稍后重试</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 渲染音乐信息
+        function renderMusic(data) {
+            const content = document.getElementById('content');
+            
+            if (data.code !== 200) {
+                content.innerHTML = `
+                    <div class="card error">
+                        <h3>⚠️ 请求失败</h3>
+                        <p>${data.msg || '未知错误'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            currentData = data;
+            const music = data.data;
+
+            content.innerHTML = `
+                <div class="card">
+                    <div class="music-info">
+                        <img src="${music.cover}" alt="封面" class="cover" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23333%22 width=%22100%22 height=%22100%22/><text fill=%22%23fff%22 font-size=%2212%22 x=%2250%%22 y=%2250%%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22>封面加载失败</text></svg>'">
+                        <div class="song-name">${music.song_name}</div>
+                        <div class="singer">👤 ${music.singers}</div>
+                        <div class="album">💿 ${music.album}</div>
+                        <div class="meta">
+                            <span>🎵 ${music.level}</span>
+                            <span>📦 ${music.size}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="lyrics">${music.lyric || '暂无歌词'}</div>
+                    
+                    <div style="margin-top: 20px; text-align: center;">
+                        <audio controls style="width: 100%; max-width: 400px;">
+                            <source src="${music.url}" type="audio/mpeg">
+                            您的浏览器不支持音频播放
+                        </audio>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            document.getElementById('content').innerHTML = `
+                <div class="card loading">
+                    <div class="spinner"></div>
+                    <p>正在解析音乐数据...</p>
+                </div>
+            `;
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 默认加载示例音乐
+            loadDefault();
+            
+            // 监听回车键
+            document.getElementById('musicInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    parseMusic();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
